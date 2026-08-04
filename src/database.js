@@ -3,6 +3,7 @@ const path = require('path');
 
 const db = new Database(path.join(__dirname, '..', 'dinizbot.db'));
 db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
 function initDB() {
     db.exec(`
@@ -16,7 +17,15 @@ function initDB() {
             soadm INTEGER DEFAULT 0,
             antigolpe INTEGER DEFAULT 1,
             sistema_gold INTEGER DEFAULT 0,
-            prefixo TEXT DEFAULT '/'
+            prefixo TEXT DEFAULT '/',
+            banner TEXT,
+            status_msg TEXT
+        );
+        
+        CREATE TABLE IF NOT EXISTS prefixos_extra (
+            chat_id TEXT,
+            prefixo TEXT,
+            PRIMARY KEY (chat_id, prefixo)
         );
         
         CREATE TABLE IF NOT EXISTS admins_dono (
@@ -55,6 +64,11 @@ function initDB() {
             palavra TEXT
         );
         
+        CREATE TABLE IF NOT EXISTS cmds_bloqueados (
+            chat_id TEXT,
+            comando TEXT
+        );
+        
         CREATE TABLE IF NOT EXISTS anuncios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             chat_id TEXT,
@@ -73,6 +87,21 @@ function initDB() {
             user_id TEXT,
             motivo TEXT,
             data DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        
+        CREATE TABLE IF NOT EXISTS figurinhas_proibidas (
+            grupo_id TEXT,
+            hash TEXT
+        );
+        
+        CREATE TABLE IF NOT EXISTS fig_adv (
+            grupo_id TEXT,
+            hash TEXT
+        );
+        
+        CREATE TABLE IF NOT EXISTS fig_del (
+            grupo_id TEXT,
+            hash TEXT
         );
     `);
     
