@@ -1,0 +1,34 @@
+<div class="page-header">
+    <h2>📊 Relatórios</h2>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h3>📦 Exportar Dados</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-primary" onclick="exportarCSV('produtos')">📦 Exportar Produtos (CSV)</button>
+            <button class="btn btn-primary" onclick="exportarCSV('pedidos')">📋 Exportar Pedidos (CSV)</button>
+            <button class="btn btn-primary" onclick="exportarCSV('clientes')">👥 Exportar Clientes (CSV)</button>
+            <button class="btn btn-primary" onclick="exportarPDF()">📄 Gerar Relatório PDF</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📊 Resumo do Sistema</h3>
+        <div id="resumoSistema">
+            <div style="text-align:center;color:#999;padding:20px">Carregando...</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📈 Vendas por Período</h3>
+    <div style="display:flex;gap:10px;margin-bottom:15px">
+        <input type="date" id="relDataInicio" style="padding:10px;border-radius:8px;border:2px solid var(--border)">
+        <input type="date" id="relDataFim" style="padding:10px;border-radius:8px;border:2px solid var(--border)">
+        <button class="btn btn-primary" onclick="gerarRelatorioPeriodo()">Gerar Relatório</button>
+    </div>
+    <div id="relatorioPeriodo">
+        <div style="text-align:center;color:#999;padding:20px">Selecione um período</div>
+    </div>
+</div>
