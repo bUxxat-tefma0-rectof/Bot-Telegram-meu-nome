@@ -1,0 +1,88 @@
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <h3 id="statClientes">0</h3>
+            <p>Total de Clientes</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+            <h3 id="statPedidosHoje">0</h3>
+            <p>Pedidos Hoje</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+            <h3 id="statFaturamentoMes">R$ 0,00</h3>
+            <p>Faturamento do Mês</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-info">
+            <h3 id="statPendentes">0</h3>
+            <p>Pedidos Pendentes</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+            <h3 id="statProdutos">0</h3>
+            <p>Produtos Ativos</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-info">
+            <h3 id="statTicketMedio">R$ 0,00</h3>
+            <p>Ticket Médio</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h3>📊 Vendas dos Últimos 7 Dias</h3>
+        <div style="height:250px;display:flex;align-items:flex-end;gap:8px;padding:10px 0" id="graficoVendas">
+            <div style="flex:1;text-align:center;color:#999">Carregando...</div>
+        </div>
+    </div>
+    <div class="card">
+        <h3>🏆 Top 10 Produtos</h3>
+        <div id="topProdutos">
+            <div style="text-align:center;color:#999;padding:20px">Carregando...</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📋 Últimos Pedidos</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>Número</th><th>Cliente</th><th>Total</th><th>Status</th><th>Data</th></tr>
+            </thead>
+            <tbody id="ultimosPedidos">
+                <tr><td colspan="5" style="text-align:center;color:#999">Carregando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h3>⚠️ Estoque Baixo</h3>
+        <div id="estoqueBaixo">
+            <div style="text-align:center;color:#999;padding:20px">Carregando...</div>
+        </div>
+    </div>
+    <div class="card">
+        <h3>👥 Últimos Clientes</h3>
+        <div id="ultimosClientes">
+            <div style="text-align:center;color:#999;padding:20px">Carregando...</div>
+        </div>
+    </div>
+</div>
