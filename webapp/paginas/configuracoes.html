@@ -1,0 +1,95 @@
+<div class="page-header">
+    <h2>⚙️ Configurações do Sistema</h2>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h3>🏪 Dados da Loja</h3>
+        <div class="form-group">
+            <label>Nome da Loja</label>
+            <input type="text" id="cfgNomeLoja" onchange="salvarConfig('nome_loja', this.value)">
+        </div>
+        <div class="form-group">
+            <label>Logo (URL)</label>
+            <input type="text" id="cfgLogo" onchange="salvarConfig('logo', this.value)">
+        </div>
+        <div class="form-group">
+            <label>Banner (URL)</label>
+            <input type="text" id="cfgBanner" onchange="salvarConfig('banner', this.value)">
+        </div>
+        <div class="form-group">
+            <label>Emoji da Loja</label>
+            <input type="text" id="cfgEmoji" onchange="salvarConfig('emoji_loja', this.value)" maxlength="2">
+        </div>
+        <div class="form-group">
+            <label>Descrição</label>
+            <textarea id="cfgDescricao" onchange="salvarConfig('sobre_loja', this.value)" rows="3"></textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>💳 Pagamentos</h3>
+        <div class="form-group">
+            <label>Pedido Mínimo (R$)</label>
+            <input type="number" id="cfgPedidoMinimo" onchange="salvarConfig('pedido_minimo', this.value)" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Taxa de Entrega (R$)</label>
+            <input type="number" id="cfgTaxaEntrega" onchange="salvarConfig('taxa_entrega', this.value)" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Expiração PIX (minutos)</label>
+            <input type="number" id="cfgExpiracaoPix" onchange="salvarConfig('tempo_expiracao_pix', this.value)">
+        </div>
+        <div class="form-group">
+            <label>Gateway de Pagamento</label>
+            <select id="cfgGateway" onchange="salvarConfig('gateway_ativo', this.value)">
+                <option value="mercadopago">Mercado Pago</option>
+                <option value="pix_manual">PIX Manual</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Aprovação Automática</label>
+            <select id="cfgAprovacao" onchange="salvarConfig('aprovacao_automatica', this.value)">
+                <option value="1">Sim</option>
+                <option value="0">Não (Manual)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>👥 Afiliados</h3>
+        <div class="form-group">
+            <label>Comissão Padrão (%)</label>
+            <input type="number" id="cfgComissao" onchange="salvarConfig('comissao_padrao', this.value)" step="0.1">
+        </div>
+        <div class="form-group">
+            <label>Valor Mínimo para Saque (R$)</label>
+            <input type="number" id="cfgMinSaque" onchange="salvarConfig('minimo_saque', this.value)" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Prazo para Saque (dias)</label>
+            <input type="number" id="cfgPrazoSaque" onchange="salvarConfig('prazo_saque', this.value)">
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>🔒 Segurança</h3>
+        <div class="form-group">
+            <label>Máximo de Tentativas</label>
+            <input type="number" id="cfgMaxTentativas" onchange="salvarConfig('max_tentativas', this.value)">
+        </div>
+        <div class="form-group">
+            <label>Bloqueio Temporário (minutos)</label>
+            <input type="number" id="cfgBloqueioMin" onchange="salvarConfig('bloqueio_minutos', this.value)">
+        </div>
+        <div class="form-group">
+            <label>Backup Automático</label>
+            <select id="cfgBackupAuto" onchange="salvarConfig('backup_automatico', this.value)">
+                <option value="1">Ativado</option>
+                <option value="0">Desativado</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="criarBackup()">💾 Criar Backup Agora</button>
+    </div>
+</div>
