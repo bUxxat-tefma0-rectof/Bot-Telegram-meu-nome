@@ -1,0 +1,36 @@
+<div class="page-header">
+    <h2>📦 Gerenciar Produtos</h2>
+    <div style="display:flex;gap:10px">
+        <input type="text" id="buscaProduto" placeholder="🔍 Buscar produto..." 
+               style="padding:10px;border-radius:8px;border:2px solid var(--border);font-size:14px;width:250px"
+               oninput="buscarProdutos()">
+        <button class="btn btn-primary" onclick="showModalProduto()">+ Novo Produto</button>
+        <button class="btn btn-outline" onclick="importarProdutos()">📥 Importar</button>
+        <button class="btn btn-outline" onclick="exportarProdutos()">📤 Exportar</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Preço</th>
+                    <th>Promoção</th>
+                    <th>Estoque</th>
+                    <th>Destaque</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaProdutos">
+                <tr><td colspan="10" style="text-align:center;color:#999;padding:20px">Carregando produtos...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination" id="paginacaoProdutos" style="display:flex;justify-content:center;gap:5px;margin-top:15px"></div>
+</div>
