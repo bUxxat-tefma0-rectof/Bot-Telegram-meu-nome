@@ -7,14 +7,185 @@
     <meta name="theme-color" content="#6366f1">
     <title>Loja Digital</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="assets/css/main.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #ec4899;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 70px;
+            -webkit-font-smoothing: antialiased;
+        }
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-bar { padding: 10px 16px; background: var(--card); position: sticky; top: 52px; z-index: 50; }
+        .search-bar input {
+            width: 100%; padding: 12px 16px; border-radius: 25px;
+            border: 2px solid var(--border); font-size: 15px; outline: none;
+            background: var(--bg); transition: 0.3s;
+        }
+        .search-bar input:focus { border-color: var(--primary); }
+        
+        .categories-scroll {
+            display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px;
+            background: var(--card); white-space: nowrap; -webkit-overflow-scrolling: touch;
+        }
+        .categories-scroll::-webkit-scrollbar { display: none; }
+        .category-chip {
+            display: flex; flex-direction: column; align-items: center; padding: 10px 14px;
+            background: var(--bg); border-radius: 20px; cursor: pointer; font-size: 12px;
+            min-width: 60px; border: 2px solid transparent; transition: 0.2s;
+        }
+        .category-chip.active { border-color: var(--primary); background: rgba(99,102,241,0.05); }
+        .category-chip .emoji { font-size: 24px; }
+        
+        .products-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 16px;
+        }
+        .product-card {
+            background: var(--card); border-radius: var(--radius); overflow: hidden;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .product-card:active { transform: scale(0.97); }
+        .discount-badge {
+            position: absolute; top: 8px; left: 8px; background: var(--secondary);
+            color: white; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; z-index: 10;
+        }
+        .product-image {
+            width: 100%; height: 130px; background: #e2e8f0;
+            display: flex; align-items: center; justify-content: center; font-size: 50px;
+        }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; }
+        .product-info { padding: 10px 12px; }
+        .product-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
+        .product-brand { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+        .product-price { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .product-old-price { font-size: 11px; color: var(--text-light); text-decoration: line-through; margin-left: 4px; }
+        
+        .page { display: none; animation: fadeIn 0.3s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .cart-btn {
+            position: fixed; bottom: 25px; right: 20px; background: var(--primary);
+            color: white; width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            cursor: pointer; box-shadow: 0 4px 20px rgba(99,102,241,0.4); border: none; z-index: 90;
+        }
+        .cart-badge {
+            position: absolute; top: -5px; right: -5px; background: var(--secondary);
+            color: white; border-radius: 50%; width: 24px; height: 24px;
+            font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+        
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
+            display: flex; justify-content: space-around; padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            border: none; background: none; color: var(--text-light); font-size: 10px; cursor: pointer; padding: 5px 12px; transition: 0.2s;
+        }
+        .nav-item.active { color: var(--primary); font-weight: 600; }
+        .nav-item .nav-icon { font-size: 22px; }
+        
+        .btn {
+            display: block; width: 100%; padding: 14px; border-radius: var(--radius);
+            font-size: 16px; font-weight: 700; cursor: pointer; border: none; text-align: center; transition: 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:active { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+        
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: flex-end;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-sheet {
+            background: var(--card); width: 100%; max-height: 85vh; border-radius: 20px 20px 0 0;
+            overflow-y: auto; animation: slideUp 0.3s;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { background: var(--bg); border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+        .modal-body { padding: 20px; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-icon { font-size: 60px; margin-bottom: 10px; }
+        .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
+        .empty-text { color: var(--text-light); font-size: 14px; }
+        
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            color: white; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;
+            z-index: 300; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        
+        .cart-item {
+            display: flex; align-items: center; padding: 12px 16px; background: var(--card);
+            border-bottom: 1px solid var(--border); gap: 12px;
+        }
+        .cart-item-name { font-weight: 600; font-size: 14px; }
+        .cart-item-price { color: var(--primary); font-weight: 700; font-size: 15px; }
+        .qty-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--primary);
+            background: white; color: var(--primary); font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qty-value { font-size: 16px; font-weight: 600; min-width: 25px; text-align: center; }
+        
+        .card { background: var(--card); padding: 16px; margin: 10px 16px; border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+        
+        .payment-method {
+            display: flex; align-items: center; padding: 12px; border: 2px solid var(--border);
+            border-radius: var(--radius); margin-bottom: 8px; cursor: pointer; gap: 12px; transition: 0.2s;
+        }
+        .payment-method.selected { border-color: var(--primary); background: rgba(99,102,241,0.03); }
+        .method-icon { font-size: 28px; }
+        .method-name { font-weight: 600; }
+        .method-check {
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center; margin-left: auto;
+        }
+        .payment-method.selected .method-check { border-color: var(--primary); background: var(--primary); color: white; }
+    </style>
 </head>
 <body>
 
-    <!-- HEADER -->
-    <header class="app-header" id="appHeader">
-        <span id="headerTitle">🛒 Loja Digital</span>
-    </header>
+    <div class="header">🛒 Loja Digital</div>
 
     <!-- TELA HOME -->
     <div class="page active" id="page-home">
@@ -22,9 +193,7 @@
             <input type="search" id="searchInput" placeholder="🔍 Buscar produtos...">
         </div>
         <div class="categories-scroll" id="categoriesContainer"></div>
-        <div class="products-grid" id="productsContainer">
-            <div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Carregando produtos...</div></div>
-        </div>
+        <div class="products-grid" id="productsContainer"></div>
     </div>
 
     <!-- TELA CARRINHO -->
@@ -34,8 +203,7 @@
         <div id="cartEmpty" class="empty-state" style="display:none">
             <div class="empty-icon">🛒</div>
             <div class="empty-title">Carrinho Vazio</div>
-            <div class="empty-text">Adicione produtos para continuar</div>
-            <button class="btn btn-primary" onclick="showPage('home')" style="width:80%;margin:15px auto">🛍️ Ver Produtos</button>
+            <button class="btn btn-primary" onclick="showPage('home')" style="width:80%;margin:0 auto">🛍️ Ver Produtos</button>
         </div>
     </div>
 
@@ -50,7 +218,6 @@
         <div id="ordersEmpty" class="empty-state" style="display:none">
             <div class="empty-icon">📦</div>
             <div class="empty-title">Nenhum Pedido</div>
-            <button class="btn btn-primary" onclick="showPage('home')" style="width:80%;margin:15px auto">🛍️ Fazer Compras</button>
         </div>
     </div>
 
@@ -64,41 +231,33 @@
         <div class="products-grid" id="ofertasContainer"></div>
     </div>
 
-    <!-- BOTÃO CARRINHO FLUTUANTE -->
+    <!-- BOTÃO CARRINHO -->
     <button class="cart-btn" onclick="showPage('carrinho')">
-        🛒
-        <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+        🛒<span class="cart-badge" id="cartBadge" style="display:none">0</span>
     </button>
 
-    <!-- NAVEGAÇÃO INFERIOR -->
-    <nav style="position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -2px 10px rgba(0,0,0,0.05);z-index:100">
-        <button class="nav-item active" data-page="home" onclick="showPage('home')" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;color:#999;font-size:11px;cursor:pointer">
-            <span style="font-size:22px">🏠</span><span>Início</span>
+    <!-- NAVEGAÇÃO -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-page="home" onclick="showPage('home')">
+            <span class="nav-icon">🏠</span>Início
         </button>
-        <button class="nav-item" data-page="carrinho" onclick="showPage('carrinho')" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;color:#999;font-size:11px;cursor:pointer">
-            <span style="font-size:22px">🛒</span><span>Carrinho</span>
+        <button class="nav-item" data-page="carrinho" onclick="showPage('carrinho')">
+            <span class="nav-icon">🛒</span>Carrinho
         </button>
-        <button class="nav-item" data-page="pedidos" onclick="showPage('pedidos')" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;color:#999;font-size:11px;cursor:pointer">
-            <span style="font-size:22px">📦</span><span>Pedidos</span>
+        <button class="nav-item" data-page="pedidos" onclick="showPage('pedidos')">
+            <span class="nav-icon">📦</span>Pedidos
         </button>
-        <button class="nav-item" data-page="perfil" onclick="showPage('perfil')" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;color:#999;font-size:11px;cursor:pointer">
-            <span style="font-size:22px">👤</span><span>Perfil</span>
+        <button class="nav-item" data-page="perfil" onclick="showPage('perfil')">
+            <span class="nav-icon">👤</span>Perfil
         </button>
     </nav>
 
     <script>
         const API = '/api';
         const tg = window.Telegram?.WebApp;
-        
         const state = {
-            page: 'home',
-            categorias: [],
-            produtos: [],
-            carrinho: [],
-            pedidos: [],
-            perfil: null,
-            categoriaAtiva: null,
-            metodoPagamento: 'pix',
+            page: 'home', categorias: [], produtos: [], carrinho: [], pedidos: [],
+            perfil: null, categoriaAtiva: null, metodoPagamento: 'pix',
             userId: tg?.initDataUnsafe?.user?.id || 1
         };
 
@@ -111,293 +270,164 @@
         // ============ NAVEGAÇÃO ============
         function showPage(name) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => { n.style.color = '#999'; n.style.fontWeight = 'normal'; });
-            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             const page = document.getElementById(`page-${name}`);
             if (page) page.classList.add('active');
-            
             const nav = document.querySelector(`[data-page="${name}"]`);
-            if (nav) { nav.style.color = '#6366f1'; nav.style.fontWeight = '600'; }
-            
+            if (nav) nav.classList.add('active');
             state.page = name;
-            
             if (name === 'carrinho') renderCarrinho();
             if (name === 'pedidos') loadPedidos();
             if (name === 'perfil') renderPerfil();
             if (name === 'checkout') renderCheckout();
             if (name === 'ofertas') loadOfertas();
-            
             window.scrollTo(0, 0);
         }
 
         // ============ API ============
-        async function apiGet(url) { try { const r = await fetch(API + url); return await r.json(); } catch(e) { return {}; } }
-        async function apiPost(url, data) {
-            try {
-                const r = await fetch(API + url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-                return await r.json();
-            } catch(e) { return {sucesso:false}; }
-        }
+        async function apiGet(url) { try { const r = await fetch(API+url); return await r.json(); } catch(e) { return {}; } }
+        async function apiPost(url, data) { try { const r = await fetch(API+url, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); return await r.json(); } catch(e) { return {sucesso:false}; } }
 
         // ============ CATEGORIAS ============
-        async function loadCategorias() {
-            const data = await apiGet('/categorias');
-            state.categorias = Array.isArray(data) ? data : [];
-            renderCategorias();
-        }
+        async function loadCategorias() { state.categorias = await apiGet('/categorias'); state.categorias = Array.isArray(state.categorias)?state.categorias:[]; renderCategorias(); }
         function renderCategorias() {
             const c = document.getElementById('categoriesContainer');
             if (!c) return;
-            c.innerHTML = state.categorias.map(cat => `
-                <div class="category-chip ${cat.id === state.categoriaAtiva ? 'active' : ''}" onclick="toggleCategoria(${cat.id})">
-                    <span class="emoji">${cat.emoji || '📦'}</span><span>${cat.nome}</span>
-                </div>`).join('');
+            c.innerHTML = state.categorias.map(cat => `<div class="category-chip ${cat.id===state.categoriaAtiva?'active':''}" onclick="toggleCategoria(${cat.id})"><span class="emoji">${cat.emoji||'📦'}</span><span>${cat.nome}</span></div>`).join('');
         }
-        function toggleCategoria(id) {
-            state.categoriaAtiva = state.categoriaAtiva === id ? null : id;
-            renderCategorias();
-            loadProdutos(state.categoriaAtiva);
-        }
+        function toggleCategoria(id) { state.categoriaAtiva = state.categoriaAtiva===id?null:id; renderCategorias(); loadProdutos(state.categoriaAtiva); }
 
         // ============ PRODUTOS ============
-        async function loadProdutos(catId = null, termo = null) {
+        async function loadProdutos(catId=null, termo=null) {
             let url = '/produtos?limite=50';
             if (catId) url += `&categoria_id=${catId}`;
             if (termo) url = `/produtos/pesquisar?q=${encodeURIComponent(termo)}`;
-            
             const data = await apiGet(url);
             state.produtos = data.produtos || [];
             renderProdutos();
         }
         function renderProdutos() {
             const c = document.getElementById('productsContainer');
-            if (!c || state.produtos.length === 0) {
-                if (c) c.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Nenhum produto</div></div>';
-                return;
-            }
+            if (!c || state.produtos.length===0) { if(c) c.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Nenhum produto</div></div>'; return; }
             c.innerHTML = state.produtos.map(p => {
                 const preco = p.preco_promocional || p.preco;
-                const desc = p.preco_promocional ? Math.round((1 - p.preco_promocional / p.preco) * 100) : 0;
+                const desc = p.preco_promocional ? Math.round((1-p.preco_promocional/p.preco)*100) : 0;
                 return `<div class="product-card" onclick="abrirProduto(${p.id})">
-                    ${desc > 0 ? `<div class="discount-badge">-${desc}%</div>` : ''}
-                    <div class="product-image">📦</div>
-                    <div class="product-info">
-                        <div class="product-name">${p.nome}</div>
-                        <span class="product-price">R$ ${preco.toFixed(2)}</span>
-                        ${p.preco_promocional ? `<span class="product-old-price">R$ ${p.preco.toFixed(2)}</span>` : ''}
-                    </div>
-                </div>`;
+                    ${desc>0?`<div class="discount-badge">-${desc}%</div>`:''}
+                    <div class="product-image">${p.foto?`<img src="${p.foto}" onerror="this.innerHTML='📦'">`:'📦'}</div>
+                    <div class="product-info"><div class="product-name">${p.nome}</div>
+                        ${p.marca?`<div class="product-brand">${p.marca}</div>`:''}
+                        <span class="product-price">${fmt(preco)}</span>
+                        ${p.preco_promocional?`<span class="product-old-price">${fmt(p.preco)}</span>`:''}
+                    </div></div>`;
             }).join('');
         }
 
         // ============ PESQUISA ============
-        document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('searchInput');
-            if (input) {
-                let t;
-                input.addEventListener('input', () => {
-                    clearTimeout(t);
-                    t = setTimeout(() => {
-                        const v = input.value.trim();
-                        if (v.length >= 2) loadProdutos(null, v);
-                        else if (v.length === 0) loadProdutos(state.categoriaAtiva);
-                    }, 500);
-                });
-            }
+        document.addEventListener('DOMContentLoaded',()=>{
+            const input=document.getElementById('searchInput');
+            if(input){let t;input.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{const v=input.value.trim();if(v.length>=2)loadProdutos(null,v);else if(v.length===0)loadProdutos(state.categoriaAtiva);},500);});}
         });
 
         // ============ MODAL PRODUTO ============
         function abrirProduto(id) {
-            const p = state.produtos.find(pr => pr.id === id);
-            if (!p) return;
+            const p = state.produtos.find(pr=>pr.id===id);
+            if(!p) return;
             const preco = p.preco_promocional || p.preco;
-            
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay active';
-            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-            
+            overlay.onclick = (e) => { if(e.target===overlay) overlay.remove(); };
             overlay.innerHTML = `<div class="modal-sheet" onclick="event.stopPropagation()">
                 <div class="modal-handle"></div>
-                <div class="modal-header"><h3>${p.nome}</h3><button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
+                <div class="modal-header"><h3 class="modal-title">${p.nome}</h3><button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
                 <div class="modal-body">
-                    <div style="font-size:80px;text-align:center;padding:20px">📦</div>
-                    ${p.marca ? `<p style="color:#999">🏷 ${p.marca}</p>` : ''}
-                    <p>${p.descricao || ''}</p>
-                    <h2 style="color:#6366f1;margin:15px 0">R$ ${preco.toFixed(2)}</h2>
-                    ${p.preco_promocional ? `<p style="text-decoration:line-through;color:#999">R$ ${p.preco.toFixed(2)}</p>` : ''}
-                    <p style="color:#999">📦 Estoque: ${p.estoque} ${p.unidade || 'un'}</p>
-                    <button class="btn btn-primary" onclick="addCarrinho(${p.id});this.closest('.modal-overlay').remove()" style="margin-top:15px">🛒 Adicionar ao Carrinho</button>
-                </div>
-            </div>`;
-            
+                    <div style="width:100%;height:200px;background:#e2e8f0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:70px;margin-bottom:15px">${p.foto?`<img src="${p.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`:'📦'}</div>
+                    ${p.marca?`<p style="color:var(--text-light)">🏷 ${p.marca}</p>`:''}
+                    <p style="margin:10px 0">${p.descricao||''}</p>
+                    <h2 style="color:var(--primary);margin:15px 0">${fmt(preco)}</h2>
+                    ${p.preco_promocional?`<p style="text-decoration:line-through;color:var(--text-light)">${fmt(p.preco)}</p>`:''}
+                    <p style="color:var(--text-light)">📦 Estoque: ${p.estoque} ${p.unidade||'un'}</p>
+                    <div style="display:flex;align-items:center;gap:15px;margin:20px 0">
+                        <button class="qty-btn" onclick="let s=this.nextElementSibling;s.textContent=Math.max(1,parseInt(s.textContent)-1)">➖</button>
+                        <span class="qty-value">1</span>
+                        <button class="qty-btn" onclick="this.previousElementSibling.textContent=parseInt(this.previousElementSibling.textContent)+1">➕</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="addCarrinho(${p.id},parseInt(this.parentElement.querySelector('.qty-value').textContent));this.closest('.modal-overlay').remove()">🛒 Adicionar - ${fmt(preco)}</button>
+                </div></div>`;
             document.body.appendChild(overlay);
         }
 
         // ============ CARRINHO ============
-        async function loadCarrinho() {
-            const data = await apiGet(`/carrinho?userId=${state.userId}`);
-            state.carrinho = data.itens || [];
-            updateBadge();
-        }
-        function updateBadge() {
-            const badge = document.getElementById('cartBadge');
-            if (badge) {
-                const t = state.carrinho.reduce((s, i) => s + i.quantidade, 0);
-                badge.textContent = t;
-                badge.style.display = t > 0 ? 'flex' : 'none';
-            }
-        }
-        async function addCarrinho(prodId, qtd = 1) {
-            await apiPost('/carrinho/add', {userId: state.userId, produtoId: prodId, quantidade: qtd});
-            await loadCarrinho();
-            mostrarToast('✅ Adicionado!');
-        }
+        async function loadCarrinho() { const d=await apiGet(`/carrinho?userId=${state.userId}`);state.carrinho=d.itens||[];updateBadge(); }
+        function updateBadge() { const b=document.getElementById('cartBadge');if(b){const t=state.carrinho.reduce((s,i)=>s+i.quantidade,0);b.textContent=t;b.style.display=t>0?'flex':'none';} }
+        async function addCarrinho(prodId,qtd=1) { await apiPost('/carrinho/add',{userId:state.userId,produtoId:prodId,quantidade:qtd});await loadCarrinho();toast('✅ Adicionado!','success'); }
         function renderCarrinho() {
-            const items = document.getElementById('cartItems');
-            const total = document.getElementById('cartTotal');
-            const empty = document.getElementById('cartEmpty');
-            
-            if (state.carrinho.length === 0) {
-                if (items) items.innerHTML = '';
-                if (total) total.innerHTML = '';
-                if (empty) empty.style.display = 'block';
-                return;
-            }
-            if (empty) empty.style.display = 'none';
-            
-            let tot = 0;
-            if (items) items.innerHTML = state.carrinho.map(i => {
-                const p = i.preco_promocional || i.preco;
-                tot += p * i.quantidade;
-                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:white;border-bottom:1px solid #eee">
-                    <div><strong>${i.nome}</strong><br><span style="color:#999;font-size:13px">${i.quantidade}x R$ ${p.toFixed(2)}</span></div>
-                    <div style="display:flex;align-items:center;gap:10px">
-                        <button onclick="updateQtd(${i.id}, ${i.quantidade - 1})" style="width:30px;height:30px;border-radius:50%;border:2px solid #6366f1;background:white;color:#6366f1;font-size:16px;cursor:pointer">➖</button>
-                        <span>${i.quantidade}</span>
-                        <button onclick="updateQtd(${i.id}, ${i.quantidade + 1})" style="width:30px;height:30px;border-radius:50%;border:2px solid #6366f1;background:white;color:#6366f1;font-size:16px;cursor:pointer">➕</button>
-                        <button onclick="removeItem(${i.id})" style="background:none;border:none;font-size:18px;cursor:pointer">🗑</button>
-                    </div>
-                </div>`;
-            }).join('');
-            
-            if (total) total.innerHTML = `<div style="padding:16px;background:white;margin-top:10px">
-                <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:bold;margin-bottom:10px">
-                    <span>Total</span><span style="color:#6366f1">R$ ${tot.toFixed(2)}</span>
-                </div>
-                <button class="btn btn-primary" onclick="showPage('checkout')">💳 Finalizar Pedido</button>
-            </div>`;
+            const items=document.getElementById('cartItems'),total=document.getElementById('cartTotal'),empty=document.getElementById('cartEmpty');
+            if(state.carrinho.length===0){if(items)items.innerHTML='';if(total)total.innerHTML='';if(empty)empty.style.display='block';return;}
+            if(empty)empty.style.display='none';
+            let tot=0;
+            if(items)items.innerHTML=state.carrinho.map(i=>{const p=i.preco_promocional||i.preco;tot+=p*i.quantidade;return`<div class="cart-item">
+                <div style="width:50px;height:50px;background:#e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:25px">📦</div>
+                <div style="flex:1"><div class="cart-item-name">${i.nome}</div><div class="cart-item-price">${fmt(p*i.quantidade)}</div></div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <button class="qty-btn" onclick="updateQtd(${i.id},${i.quantidade-1})">➖</button>
+                    <span class="qty-value">${i.quantidade}</span>
+                    <button class="qty-btn" onclick="updateQtd(${i.id},${i.quantidade+1})">➕</button>
+                </div></div>`;}).join('');
+            if(total)total.innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-bottom:10px"><span>Total</span><span style="color:var(--primary)">${fmt(tot)}</span></div><button class="btn btn-primary" onclick="showPage('checkout')">💳 Finalizar Pedido</button></div>`;
         }
-        async function updateQtd(id, qtd) {
-            if (qtd <= 0) return removeItem(id);
-            await apiPost('/carrinho/update', {carrinhoId: id, quantidade: qtd});
-            await loadCarrinho();
-            renderCarrinho();
-        }
-        async function removeItem(id) {
-            await apiPost('/carrinho/remover', {carrinhoId: id});
-            await loadCarrinho();
-            renderCarrinho();
-        }
+        async function updateQtd(id,qtd) { if(qtd<=0)return removeItem(id);await apiPost('/carrinho/update',{carrinhoId:id,quantidade:qtd});await loadCarrinho();renderCarrinho(); }
+        async function removeItem(id) { await apiPost('/carrinho/remover',{carrinhoId:id});await loadCarrinho();renderCarrinho(); }
 
         // ============ CHECKOUT ============
         function renderCheckout() {
-            const c = document.getElementById('checkoutContent');
-            if (!c) return;
-            if (state.carrinho.length === 0) {
-                c.innerHTML = '<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-title">Carrinho vazio</div></div>';
-                return;
-            }
-            const tot = state.carrinho.reduce((s, i) => s + (i.preco_promocional || i.preco) * i.quantidade, 0);
-            
-            c.innerHTML = `<div style="padding:16px">
-                <div class="card" style="margin-bottom:15px"><h3>📦 Resumo</h3>
-                    ${state.carrinho.map(i => `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span>${i.quantidade}x ${i.nome}</span><span>R$ ${((i.preco_promocional||i.preco)*i.quantidade).toFixed(2)}</span></div>`).join('')}
-                    <hr><div style="display:flex;justify-content:space-between;font-size:18px;font-weight:bold"><span>Total</span><span style="color:#6366f1">R$ ${tot.toFixed(2)}</span></div>
-                </div>
-                <div style="display:flex;gap:10px;margin-bottom:15px">
-                    <button class="btn btn-primary" onclick="finalizar('pix')">💳 PIX</button>
-                    <button class="btn btn-primary" onclick="finalizar('dinheiro')" style="background:#10b981">💵 Dinheiro</button>
-                </div>
-            </div>`;
+            const c=document.getElementById('checkoutContent');
+            if(!c)return;
+            if(state.carrinho.length===0){c.innerHTML='<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-title">Carrinho vazio</div></div>';return;}
+            const tot=state.carrinho.reduce((s,i)=>s+(i.preco_promocional||i.preco)*i.quantidade,0);
+            c.innerHTML=`<div class="card"><div class="card-title">📦 Resumo do Pedido</div>${state.carrinho.map(i=>`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span>${i.quantidade}x ${i.nome}</span><span>${fmt((i.preco_promocional||i.preco)*i.quantidade)}</span></div>`).join('')}<hr><div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700"><span>Total</span><span style="color:var(--primary)">${fmt(tot)}</span></div></div>
+            <div class="card"><div class="card-title">💳 Forma de Pagamento</div>
+                <div class="payment-method ${state.metodoPagamento==='pix'?'selected':''}" onclick="state.metodoPagamento='pix';renderCheckout()"><span class="method-icon">💳</span><div><div class="method-name">PIX</div><div style="font-size:12px;color:var(--text-light)">Pagamento instantâneo</div></div><div class="method-check">${state.metodoPagamento==='pix'?'✓':''}</div></div>
+                <div class="payment-method ${state.metodoPagamento==='dinheiro'?'selected':''}" onclick="state.metodoPagamento='dinheiro';renderCheckout()"><span class="method-icon">💵</span><div><div class="method-name">Dinheiro</div><div style="font-size:12px;color:var(--text-light)">Na entrega</div></div><div class="method-check">${state.metodoPagamento==='dinheiro'?'✓':''}</div></div>
+            </div>
+            <div style="padding:10px 16px"><button class="btn btn-primary" onclick="finalizarPedido()">💳 Pagar ${fmt(tot)}</button></div>`;
         }
-        async function finalizar(metodo) {
-            mostrarToast('⏳ Processando...');
-            const r = await apiPost('/pedidos/finalizar', {userId: state.userId, metodoPagamento: metodo});
-            if (r.sucesso) {
-                state.carrinho = [];
-                await loadCarrinho();
-                mostrarToast('✅ Pedido realizado!', 'success');
-                if (r.pagamento?.qr_code_base64) {
-                    const overlay = document.createElement('div');
-                    overlay.className = 'modal-overlay active';
-                    overlay.onclick = () => overlay.remove();
-                    overlay.innerHTML = `<div class="modal-sheet" onclick="event.stopPropagation()"><div class="modal-handle"></div><div class="modal-body" style="text-align:center"><h3>💳 PIX</h3><img src="data:image/png;base64,${r.pagamento.qr_code_base64}" style="width:250px"><p style="margin:15px 0;word-break:break-all;font-size:11px">${r.pagamento.copia_cola||''}</p><button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove();showPage('pedidos')">✅ Já paguei</button></div></div>`;
-                    document.body.appendChild(overlay);
-                }
-                showPage('pedidos');
-            } else {
-                mostrarToast('❌ ' + (r.mensagem || 'Erro'), 'error');
-            }
+        async function finalizarPedido() {
+            toast('⏳ Processando...');
+            const r=await apiPost('/pedidos/finalizar',{userId:state.userId,metodoPagamento:state.metodoPagamento});
+            if(r.sucesso){state.carrinho=[];await loadCarrinho();toast('✅ Pedido realizado!','success');
+                if(r.pagamento?.qr_code_base64){const overlay=document.createElement('div');overlay.className='modal-overlay active';overlay.onclick=()=>overlay.remove();overlay.innerHTML=`<div class="modal-sheet" onclick="event.stopPropagation()"><div class="modal-handle"></div><div class="modal-body" style="text-align:center"><h3>💳 PIX</h3><p>Escaneie o QR Code</p><img src="data:image/png;base64,${r.pagamento.qr_code_base64}" style="width:250px;height:250px"><p style="margin:15px 0;word-break:break-all;font-size:11px">${r.pagamento.copia_cola||''}</p><button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove();showPage('pedidos')">✅ Já paguei</button></div></div>`;document.body.appendChild(overlay);}showPage('pedidos');}else{toast('❌ '+(r.mensagem||'Erro'),'error');}
         }
 
         // ============ PEDIDOS ============
-        async function loadPedidos() {
-            const data = await apiGet(`/pedidos?userId=${state.userId}`);
-            state.pedidos = data.pedidos || [];
-            renderPedidos();
-        }
+        async function loadPedidos() { const d=await apiGet(`/pedidos?userId=${state.userId}`);state.pedidos=d.pedidos||[];renderPedidos(); }
         function renderPedidos() {
-            const c = document.getElementById('ordersList');
-            const e = document.getElementById('ordersEmpty');
-            if (!c) return;
-            if (state.pedidos.length === 0) { if (e) e.style.display = 'block'; c.innerHTML = ''; return; }
-            if (e) e.style.display = 'none';
-            c.innerHTML = state.pedidos.map(p => `
-                <div style="background:white;padding:15px;margin:8px 16px;border-radius:12px">
-                    <div style="display:flex;justify-content:space-between"><strong>${p.numero}</strong><span>${p.status}</span></div>
-                    <div style="font-size:18px;font-weight:bold;color:#6366f1;margin-top:5px">R$ ${(p.total||0).toFixed(2)}</div>
-                </div>`).join('');
+            const c=document.getElementById('ordersList'),e=document.getElementById('ordersEmpty');
+            if(!c)return;
+            if(state.pedidos.length===0){if(e)e.style.display='block';c.innerHTML='';return;}
+            if(e)e.style.display='none';
+            const st={recebido:'📥',confirmado:'✅',separando:'📦',entrega:'🛵',entregue:'🏠',cancelado:'❌'};
+            c.innerHTML=state.pedidos.map(p=>`<div class="card" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><strong>${p.numero}</strong><span>${st[p.status]||'📋'} ${p.status}</span></div><div style="font-size:12px;color:var(--text-light)">${p.data_pedido||''}</div><div style="font-size:18px;font-weight:700;color:var(--primary);margin-top:5px">${fmt(p.total)}</div></div>`).join('');
         }
 
         // ============ PERFIL ============
         async function loadPerfil() { state.perfil = await apiGet(`/perfil?userId=${state.userId}`); }
         function renderPerfil() {
-            const c = document.getElementById('profileContent');
-            if (!c) return;
-            const p = state.perfil || {};
-            c.innerHTML = `<div style="text-align:center;padding:30px"><div style="font-size:60px">👤</div><h2>${p.nome||'Cliente'} ${p.sobrenome||''}</h2><p style="color:#999">${p.email||'N/A'}</p></div>
-                <div style="background:white;margin:10px 16px;padding:15px;border-radius:12px">
-                    <div style="display:flex;justify-content:space-between;padding:8px 0"><span>📦 Pedidos</span><strong>${p.totalPedidos||0}</strong></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0"><span>💰 Total Gasto</span><strong style="color:#6366f1">R$ ${(p.total_gasto||0).toFixed(2)}</strong></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0"><span>⭐ Pontos</span><strong>${p.pontos_fidelidade||0}</strong></div>
-                </div>`;
+            const c=document.getElementById('profileContent');
+            if(!c)return;
+            const p=state.perfil||{};
+            c.innerHTML=`<div style="text-align:center;padding:30px"><div style="font-size:60px">👤</div><h2>${p.nome||'Cliente'} ${p.sobrenome||''}</h2><p style="color:var(--text-light)">${p.email||'N/A'}</p></div>
+            <div class="card"><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>📦 Pedidos</span><strong>${p.totalPedidos||0}</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>💰 Total Gasto</span><strong style="color:var(--primary)">${fmt(p.total_gasto||0)}</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0"><span>⭐ Pontos</span><strong>${p.pontos_fidelidade||0}</strong></div></div>`;
         }
 
         // ============ OFERTAS ============
-        async function loadOfertas() {
-            const data = await apiGet('/produtos/ofertas');
-            const prods = data.produtos || [];
-            const c = document.getElementById('ofertasContainer');
-            if (c) c.innerHTML = prods.map(p => {
-                const desc = p.preco_promocional ? Math.round((1 - p.preco_promocional / p.preco) * 100) : 0;
-                return `<div class="product-card" onclick="abrirProduto(${p.id})">
-                    ${desc > 0 ? `<div class="discount-badge">-${desc}%</div>` : ''}
-                    <div class="product-image">📦</div>
-                    <div class="product-info"><div class="product-name">${p.nome}</div>
-                        <span class="product-price">R$ ${(p.preco_promocional||p.preco).toFixed(2)}</span>
-                        ${p.preco_promocional ? `<span class="product-old-price">R$ ${p.preco.toFixed(2)}</span>` : ''}
-                    </div>
-                </div>`;
-            }).join('') || '<div class="empty-state"><div class="empty-icon">🔥</div><div class="empty-title">Nenhuma oferta</div></div>';
-        }
+        async function loadOfertas() { const d=await apiGet('/produtos/ofertas');const prods=d.produtos||[];const c=document.getElementById('ofertasContainer');if(c)c.innerHTML=prods.map(p=>{const desc=p.preco_promocional?Math.round((1-p.preco_promocional/p.preco)*100):0;return`<div class="product-card" onclick="abrirProduto(${p.id})">${desc>0?`<div class="discount-badge">-${desc}%</div>`:''}<div class="product-image">📦</div><div class="product-info"><div class="product-name">${p.nome}</div><span class="product-price">${fmt(p.preco_promocional||p.preco)}</span>${p.preco_promocional?`<span class="product-old-price">${fmt(p.preco)}</span>`:''}</div></div>`;}).join('')||'<div class="empty-state"><div class="empty-icon">🔥</div><div class="empty-title">Nenhuma oferta</div></div>';}
 
-        function mostrarToast(msg, type = '') {
-            const t = document.createElement('div');
-            t.className = `toast ${type}`;
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2500);
-        }
+        // ============ UTILS ============
+        function fmt(v) { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
+        function toast(msg,type='') { const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500); }
     </script>
 </body>
 </html>
