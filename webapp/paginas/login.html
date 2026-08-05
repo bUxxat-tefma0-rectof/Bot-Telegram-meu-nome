@@ -1,0 +1,29 @@
+<div style="display:flex;justify-content:center;align-items:center;min-height:70vh">
+    <div class="card" style="width:100%;max-width:400px">
+        <div style="text-align:center;margin-bottom:30px">
+            <div style="font-size:60px">🛒</div>
+            <h2>Painel Administrativo</h2>
+            <p style="color:var(--text-light)">Faça login para continuar</p>
+        </div>
+        
+        <div class="form-group">
+            <label>ID do Telegram</label>
+            <input type="text" id="loginTelegramId" placeholder="Seu ID do Telegram">
+        </div>
+        
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="loginSenha" placeholder="Sua senha">
+        </div>
+        
+        <button class="btn btn-primary" onclick="fazerLogin()" style="width:100%">
+            🔐 Entrar
+        </button>
+        
+        <div id="loginErro" style="color:var(--danger);text-align:center;margin-top:15px;display:none"></div>
+        
+        <div style="text-align:center;margin-top:20px">
+            <a href="#" onclick="recuperarSenha()" style="color:var(--primary);font-size:13px">Esqueceu a senha?</a>
+        </div>
+    </div>
+</div>
