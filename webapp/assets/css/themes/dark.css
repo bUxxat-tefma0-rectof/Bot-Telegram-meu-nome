@@ -1,0 +1,16 @@
+:root {
+    --primary: #818cf8;
+    --primary-hover: #6366f1;
+    --secondary: #f472b6;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e2e8f0;
+    --text-light: #94a3b8;
+    --border: #334155;
+}
+
+body { background: var(--bg); color: var(--text); }
+.stat-card, .card, table, .modal { background: var(--card); border-color: var(--border); }
+th { background: #1e293b; }
+tr:hover td { background: #334155; }
+input, select, textarea { background: #0f172a; color: var(--text); border-color: var(--border); }
