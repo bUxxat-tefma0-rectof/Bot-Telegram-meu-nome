@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Painel Admin - Loja Digital</title>
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="assets/css/themes/light.css" id="themeStylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>🛒 Painel Admin</h2>
+            <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" onclick="loadPage('dashboard')" class="nav-item active" data-page="dashboard">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a href="#" onclick="loadPage('produtos')" class="nav-item" data-page="produtos">
+                <span class="nav-icon">📦</span> Produtos
+            </a>
+            <a href="#" onclick="loadPage('categorias')" class="nav-item" data-page="categorias">
+                <span class="nav-icon">📂</span> Categorias
+            </a>
+            <a href="#" onclick="loadPage('estoque')" class="nav-item" data-page="estoque">
+                <span class="nav-icon">📋</span> Estoque
+            </a>
+            <a href="#" onclick="loadPage('pedidos')" class="nav-item" data-page="pedidos">
+                <span class="nav-icon">📑</span> Pedidos
+            </a>
+            <a href="#" onclick="loadPage('clientes')" class="nav-item" data-page="clientes">
+                <span class="nav-icon">👥</span> Clientes
+            </a>
+            <a href="#" onclick="loadPage('financeiro')" class="nav-item" data-page="financeiro">
+                <span class="nav-icon">💰</span> Financeiro
+            </a>
+            <a href="#" onclick="loadPage('cupons')" class="nav-item" data-page="cupons">
+                <span class="nav-icon">🎟</span> Cupons
+            </a>
+            <a href="#" onclick="loadPage('afiliados')" class="nav-item" data-page="afiliados">
+                <span class="nav-icon">👥</span> Afiliados
+            </a>
+            <a href="#" onclick="loadPage('mensagens')" class="nav-item" data-page="mensagens">
+                <span class="nav-icon">💬</span> Mensagens
+            </a>
+            <a href="#" onclick="loadPage('botoes')" class="nav-item" data-page="botoes">
+                <span class="nav-icon">🔘</span> Botões
+            </a>
+            <a href="#" onclick="loadPage('banners')" class="nav-item" data-page="banners">
+                <span class="nav-icon">🖼</span> Banners
+            </a>
+            <a href="#" onclick="loadPage('aparencia')" class="nav-item" data-page="aparencia">
+                <span class="nav-icon">🎨</span> Aparência
+            </a>
+            <a href="#" onclick="loadPage('relatorios')" class="nav-item" data-page="relatorios">
+                <span class="nav-icon">📊</span> Relatórios
+            </a>
+            <a href="#" onclick="loadPage('configuracoes')" class="nav-item" data-page="configuracoes">
+                <span class="nav-icon">⚙️</span> Configurações
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h1 id="pageTitle">Dashboard</h1>
+            <div class="topbar-actions">
+                <button class="btn-icon" onclick="refreshPage()">🔄</button>
+                <button class="btn-icon" onclick="toggleTheme()">🌓</button>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="content" id="contentArea">
+            <!-- Dashboard -->
+            <div class="page active" id="page-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3 id="statClientes">0</h3>
+                            <p>Clientes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <h3 id="statPedidos">0</h3>
+                            <p>Pedidos Hoje</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <h3 id="statFaturamento">R$ 0</h3>
+                            <p>Faturamento Mês</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-info">
+                            <h3 id="statPendentes">0</h3>
+                            <p>Pedidos Pendentes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>📊 Vendas dos Últimos 7 Dias</h3>
+                    <canvas id="chartVendas" height="200"></canvas>
+                </div>
+                <div class="card">
+                    <h3>🏆 Top 5 Produtos</h3>
+                    <div id="topProdutos"></div>
+                </div>
+            </div>
+
+            <!-- Produtos -->
+            <div class="page" id="page-produtos">
+                <div class="page-header">
+                    <h2>📦 Produtos</h2>
+                    <button class="btn btn-primary" onclick="showModal('modalProduto')">+ Novo Produto</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaProdutos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Categorias -->
+            <div class="page" id="page-categorias">
+                <div class="page-header">
+                    <h2>📂 Categorias</h2>
+                    <button class="btn btn-primary" onclick="showModal('modalCategoria')">+ Nova Categoria</button>
+                </div>
+                <div class="grid-3" id="gridCategorias"></div>
+            </div>
+
+            <!-- Pedidos -->
+            <div class="page" id="page-pedidos">
+                <div class="page-header"><h2>📑 Pedidos</h2></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Número</th><th>Cliente</th><th>Total</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+                        <tbody id="tabelaPedidos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Clientes -->
+            <div class="page" id="page-clientes">
+                <div class="page-header"><h2>👥 Clientes</h2></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>ID</th><th>Nome</th><th>Telefone</th><th>Total Gasto</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="tabelaClientes"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Financeiro -->
+            <div class="page" id="page-financeiro">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-info"><h3 id="finTotal">R$ 0</h3><p>Total</p></div></div>
+                    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-info"><h3 id="finMes">R$ 0</h3><p>Este Mês</p></div></div>
+                    <div class="stat-card"><div class="stat-icon">🕐</div><div class="stat-info"><h3 id="finHoje">R$ 0</h3><p>Hoje</p></div></div>
+                    <div class="stat-card"><div class="stat-icon">🎟</div><div class="stat-info"><h3 id="finDescontos">R$ 0</h3><p>Descontos</p></div></div>
+                </div>
+            </div>
+
+            <!-- Cupons -->
+            <div class="page" id="page-cupons">
+                <div class="page-header"><h2>🎟 Cupons</h2><button class="btn btn-primary" onclick="showModal('modalCupom')">+ Novo Cupom</button></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Usos</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="tabelaCupons"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Afiliados -->
+            <div class="page" id="page-afiliados">
+                <div class="page-header"><h2>👥 Afiliados</h2></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Nome</th><th>Código</th><th>Comissão</th><th>Indicações</th><th>Saldo</th><th>Ações</th></tr></thead>
+                        <tbody id="tabelaAfiliados"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mensagens -->
+            <div class="page" id="page-mensagens">
+                <div class="page-header"><h2>💬 Mensagens do Bot</h2></div>
+                <div id="listaMensagens"></div>
+            </div>
+
+            <!-- Botões -->
+            <div class="page" id="page-botoes">
+                <div class="page-header"><h2>🔘 Botões dos Menus</h2><button class="btn btn-primary" onclick="showModal('modalBotao')">+ Novo Botão</button></div>
+                <div id="listaBotoes"></div>
+            </div>
+
+            <!-- Banners -->
+            <div class="page" id="page-banners">
+                <div class="page-header"><h2>🖼 Banners</h2><button class="btn btn-primary" onclick="showModal('modalBanner')">+ Novo Banner</button></div>
+                <div class="grid-2" id="gridBanners"></div>
+            </div>
+
+            <!-- Aparência -->
+            <div class="page" id="page-aparencia">
+                <div class="page-header"><h2>🎨 Aparência</h2></div>
+                <div class="card">
+                    <h3>Tema</h3>
+                    <select id="selectTema" onchange="mudarTema(this.value)">
+                        <option value="light">Claro</option>
+                        <option value="dark">Escuro</option>
+                    </select>
+                </div>
+                <div class="card">
+                    <h3>Cores</h3>
+                    <div class="form-group"><label>Cor Primária</label><input type="color" id="corPrimaria" onchange="salvarCor('cor_primaria', this.value)"></div>
+                    <div class="form-group"><label>Cor Secundária</label><input type="color" id="corSecundaria" onchange="salvarCor('cor_secundaria', this.value)"></div>
+                </div>
+                <div class="card">
+                    <h3>Loja</h3>
+                    <div class="form-group"><label>Nome da Loja</label><input type="text" id="nomeLoja" onchange="salvarConfig('nome_loja', this.value)"></div>
+                    <div class="form-group"><label>Logo (URL)</label><input type="text" id="logoLoja" onchange="salvarConfig('logo', this.value)"></div>
+                </div>
+            </div>
+
+            <!-- Relatórios -->
+            <div class="page" id="page-relatorios">
+                <div class="page-header"><h2>📊 Relatórios</h2></div>
+                <div class="card"><h3>Exportar</h3>
+                    <button class="btn btn-primary" onclick="exportarCSV('produtos')">📦 Exportar Produtos</button>
+                    <button class="btn btn-primary" onclick="exportarCSV('pedidos')">📑 Exportar Pedidos</button>
+                    <button class="btn btn-primary" onclick="exportarCSV('clientes')">👥 Exportar Clientes</button>
+                </div>
+            </div>
+
+            <!-- Configurações -->
+            <div class="page" id="page-configuracoes">
+                <div class="page-header"><h2>⚙️ Configurações</h2></div>
+                <div class="card">
+                    <h3>Pagamentos</h3>
+                    <div class="form-group"><label>Pedido Mínimo (R$)</label><input type="number" id="cfgPedidoMinimo" onchange="salvarConfig('pedido_minimo', this.value)"></div>
+                    <div class="form-group"><label>Taxa de Entrega (R$)</label><input type="number" id="cfgTaxaEntrega" onchange="salvarConfig('taxa_entrega', this.value)"></div>
+                    <div class="form-group"><label>Expiração PIX (min)</label><input type="number" id="cfgExpiracaoPix" onchange="salvarConfig('tempo_expiracao_pix', this.value)"></div>
+                </div>
+                <div class="card">
+                    <h3>Afiliados</h3>
+                    <div class="form-group"><label>Comissão Padrão (%)</label><input type="number" id="cfgComissao" onchange="salvarConfig('comissao_afiliado', this.value)"></div>
+                </div>
+                <div class="card">
+                    <h3>Backup</h3>
+                    <button class="btn btn-primary" onclick="criarBackup()">💾 Criar Backup</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Genérico -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal" id="modalContent" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
