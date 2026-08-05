@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Loja Digital</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
+        .header { background: var(--primary); color: white; padding: 16px; text-align: center; font-weight: bold; }
+        .search { padding: 10px 16px; }
+        .search input { width: 100%; padding: 12px; border-radius: 25px; border: 2px solid #e2e8f0; font-size: 14px; }
+        .categories { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; }
+        .cat { padding: 8px 16px; background: var(--card); border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+        .cat.active { background: var(--primary); color: white; }
+        .products { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 16px; }
+        .product { background: var(--card); border-radius: 12px; padding: 10px; cursor: pointer; }
+        .product img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; }
+        .product .name { font-size: 13px; font-weight: bold; margin: 5px 0; }
+        .product .price { font-size: 15px; font-weight: bold; color: var(--primary); }
+        .cart-btn { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: none; }
+        .badge { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+    <div class="header">🛒 Loja Digital</div>
+    <div class="search">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar produtos..." oninput="search()">
+    </div>
+    <div class="categories" id="categories"></div>
+    <div class="products" id="products"></div>
+    <button class="cart-btn" onclick="showCart()">
+        🛒
+        <span class="badge" id="cartBadge">0</span>
+    </button>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        
+        let cart = [];
+        
+        async function loadCategories() {
+            const cats = await fetch('/api/categorias').then(r => r.json());
+            document.getElementById('categories').innerHTML = cats.map(c => 
+                `<div class="cat" onclick="filterCategory(${c.id})">${c.emoji} ${c.nome}</div>`
+            ).join('');
+        }
+        
+        async function loadProducts(catId = null) {
+            const url = catId ? `/api/produtos?categoria_id=${catId}` : '/api/produtos';
+            const data = await fetch(url).then(r => r.json());
+            const prods = data.produtos || [];
+            document.getElementById('products').innerHTML = prods.map(p => `
+                <div class="product" onclick="addToCart(${p.id}, '${p.nome}', ${p.preco})">
+                    <div style="height:120px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px">📦</div>
+                    <div class="name">${p.nome}</div>
+                    <div class="price">R$ ${(p.preco_promocional || p.preco).toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+        
+        function addToCart(id, nome, preco) {
+            cart.push({id, nome, preco});
+            updateBadge();
+            tg.showPopup({title: '✅ Adicionado!', message: `${nome} foi adicionado ao carrinho`});
+        }
+        
+        function updateBadge() {
+            document.getElementById('cartBadge').textContent = cart.length;
+        }
+        
+        function showCart() {
+            if (cart.length === 0) {
+                tg.showPopup({title: '🛒 Carrinho', message: 'Seu carrinho está vazio'});
+                return;
+            }
+            const total = cart.reduce((s, i) => s + i.preco, 0);
+            const items = cart.map(i => `${i.nome} - R$ ${i.preco.toFixed(2)}`).join('\n');
+            tg.showPopup({
+                title: '🛒 Carrinho',
+                message: `${items}\n\nTotal: R$ ${total.toFixed(2)}`,
+                buttons: [
+                    {type: 'default', text: '💳 Finalizar', id: 'checkout'},
+                    {type: 'cancel', text: 'Fechar'}
+                ]
+            }, (id) => {
+                if (id === 'checkout') {
+                    tg.sendData(JSON.stringify({action: 'checkout', cart}));
+                }
+            });
+        }
+        
+        function filterCategory(catId) {
+            document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            loadProducts(catId);
+        }
+        
+        function search() {
+            const q = document.getElementById('searchInput').value;
+            if (q.length >= 2) {
+                fetch(`/api/produtos/pesquisar?q=${q}`).then(r => r.json()).then(data => {
+                    document.getElementById('products').innerHTML = (data.produtos || []).map(p => `
+                        <div class="product" onclick="addToCart(${p.id}, '${p.nome}', ${p.preco})">
+                            <div style="height:120px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px">📦</div>
+                            <div class="name">${p.nome}</div>
+                            <div class="price">R$ ${(p.preco_promocional || p.preco).toFixed(2)}</div>
+                        </div>
+                    `).join('');
+                });
+            }
+        }
+        
+        loadCategories();
+        loadProducts();
+    </script>
+</body>
+</html>
