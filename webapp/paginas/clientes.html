@@ -1,0 +1,32 @@
+<div class="page-header">
+    <h2>👥 Gerenciar Clientes</h2>
+    <div style="display:flex;gap:10px">
+        <input type="text" id="buscaCliente" placeholder="🔍 Buscar cliente..." 
+               style="padding:10px;border-radius:8px;border:2px solid var(--border);font-size:14px;width:250px"
+               oninput="buscarClientes()">
+        <button class="btn btn-outline" onclick="exportarClientes()">📤 Exportar</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Telegram</th>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Total Gasto</th>
+                    <th>Pontos</th>
+                    <th>Cadastro</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaClientes">
+                <tr><td colspan="9" style="text-align:center;color:#999;padding:20px">Carregando clientes...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
