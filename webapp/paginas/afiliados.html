@@ -1,0 +1,49 @@
+<div class="page-header">
+    <h2>👥 Gerenciar Afiliados</h2>
+    <button class="btn btn-outline" onclick="exportarAfiliados()">📤 Exportar</button>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <h3 id="afTotal">0</h3>
+            <p>Total Afiliados</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+            <h3 id="afComissoes">R$ 0,00</h3>
+            <p>Total Comissões</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💵</div>
+        <div class="stat-info">
+            <h3 id="afSaldo">R$ 0,00</h3>
+            <p>Saldo a Pagar</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🏆 Ranking de Afiliados</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>Posição</th><th>Nome</th><th>Código</th><th>Comissão</th><th>Indicações</th><th>Total Comissões</th><th>Saldo</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tabelaAfiliados">
+                <tr><td colspan="8" style="text-align:center;color:#999;padding:20px">Carregando afiliados...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <h3>💵 Saques Pendentes</h3>
+    <div id="saquesPendentes">
+        <div style="text-align:center;color:#999;padding:20px">Nenhum saque pendente</div>
+    </div>
+</div>
