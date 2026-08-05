@@ -44,7 +44,6 @@ def create_flask_app():
     app = Flask(__name__, static_folder='webapp/assets', static_url_path='/assets')
     CORS(app)
     
-    # ============ ROTAS WEB ============
     @app.route('/')
     def home():
         return jsonify({'status': 'online', 'sistema': Config.NOME_LOJA, 'versao': '2.0.0'})
@@ -211,142 +210,27 @@ def create_flask_app():
             logger.error(f'Erro pedido: {e}')
             return jsonify({'sucesso': False, 'mensagem': 'Erro interno'})
     
-    # ============ API CEP ============
-    @app.route('/api/cep/<cep>')
-    def api_cep(cep):
-        from services.cep import CepService
-        return jsonify(CepService.consultar(cep))
-    
-    # ============ API ENDEREÇOS ============
-    @app.route('/api/enderecos')
-    def api_enderecos():
-        user_id = request.args.get('userId')
-        if not user_id: return jsonify([])
-        db = get_db()
-        cliente = db.execute('SELECT id FROM clientes WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not cliente: return jsonify([])
-        enderecos = [dict(r) for r in db.execute('SELECT * FROM enderecos WHERE cliente_id = ? ORDER BY principal DESC', (cliente['id'],)).fetchall()]
-        return jsonify(enderecos)
-    
-    @app.route('/api/enderecos/salvar', methods=['POST'])
-    def api_endereco_salvar():
-        data = request.json
-        db = get_db()
-        cliente = db.execute('SELECT id FROM clientes WHERE telegram_id = ?', (data.get('userId'),)).fetchone()
-        if not cliente: return jsonify({'sucesso': False})
-        total = db.execute('SELECT COUNT(*) as t FROM enderecos WHERE cliente_id = ?', (cliente['id'],)).fetchone()['t']
-        principal = 1 if total == 0 else 0
-        db.execute('INSERT INTO enderecos (cliente_id, apelido, cep, logradouro, numero, complemento, referencia, bairro, cidade, estado, principal) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                   (cliente['id'], data.get('apelido','Principal'), data.get('cep'), data.get('logradouro'), data.get('numero'), data.get('complemento'), data.get('referencia'), data.get('bairro'), data.get('cidade'), data.get('estado'), principal))
-        db.commit()
-        return jsonify({'sucesso': True})
-    
-    @app.route('/api/enderecos/deletar', methods=['POST'])
-    def api_endereco_deletar():
-        db = get_db()
-        db.execute('DELETE FROM enderecos WHERE id = ?', (request.json.get('enderecoId'),))
-        db.commit()
-        return jsonify({'sucesso': True})
-    
-    @app.route('/api/enderecos/principal', methods=['POST'])
-    def api_endereco_principal():
-        data = request.json
-        db = get_db()
-        cliente = db.execute('SELECT id FROM clientes WHERE telegram_id = ?', (data.get('userId'),)).fetchone()
-        if cliente:
-            db.execute('UPDATE enderecos SET principal = 0 WHERE cliente_id = ?', (cliente['id'],))
-            db.execute('UPDATE enderecos SET principal = 1 WHERE id = ?', (data.get('enderecoId'),))
-            db.commit()
-        return jsonify({'sucesso': True})
-    
-    # ============ API CUPONS ============
-    @app.route('/api/cupons/validar')
-    def api_cupom_validar():
-        from database.models.cupom import CupomModel
-        return jsonify(CupomModel.validar(request.args.get('codigo', '')))
-    
-    # ============ API AFILIADOS ============
-    @app.route('/api/afiliados/me')
-    def api_afiliado_me():
-        user_id = request.args.get('userId')
-        if not user_id: return jsonify({})
-        db = get_db()
-        cliente = db.execute('SELECT id FROM clientes WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not cliente: return jsonify({})
-        afiliado = db.execute('SELECT * FROM afiliados WHERE cliente_id = ?', (cliente['id'],)).fetchone()
-        return jsonify(dict(afiliado) if afiliado else {})
-    
-    @app.route('/api/afiliados/saque', methods=['POST'])
-    def api_afiliado_saque():
-        data = request.json
-        from database.models.afiliado import AfiliadoModel
-        db = get_db()
-        cliente = db.execute('SELECT id FROM clientes WHERE telegram_id = ?', (data.get('userId'),)).fetchone()
-        if not cliente: return jsonify({'sucesso': False})
-        afiliado = db.execute('SELECT * FROM afiliados WHERE cliente_id = ?', (cliente['id'],)).fetchone()
-        if not afiliado: return jsonify({'sucesso': False})
-        return jsonify(AfiliadoModel.solicitar_saque(afiliado['id'], float(data.get('valor', 0))))
-    
-    # ============ API RANKING ============
-    @app.route('/api/ranking')
-    def api_ranking():
-        from database.models.cliente import ClienteModel
-        return jsonify(ClienteModel.get_ranking())
-    
-    # ============ API NOTIFICAÇÕES ============
-    @app.route('/api/notificacoes')
-    def api_notificacoes():
-        user_id = request.args.get('userId')
-        if not user_id: return jsonify([])
-        db = get_db()
-        cliente = db.execute('SELECT id FROM clientes WHERE telegram_id = ?', (user_id,)).fetchone()
-        if not cliente: return jsonify([])
-        notifs = [dict(r) for r in db.execute('SELECT * FROM notificacoes WHERE cliente_id = ? ORDER BY data DESC LIMIT 20', (cliente['id'],)).fetchall()]
-        return jsonify(notifs)
-    
     # ============ API ADMIN ============
     @app.route('/api/admin/dashboard')
     def api_admin_dashboard():
         from admin.dashboard import DashboardAdmin
         stats = DashboardAdmin.get_estatisticas()
-        top = DashboardAdmin.get_top_produtos(5)
-        return jsonify({**stats, 'top_produtos': top})
+        return jsonify(stats)
     
     @app.route('/api/admin/produtos')
     def api_admin_produtos():
         from admin.produtos import ProdutosAdmin
         return jsonify(ProdutosAdmin.listar())
     
-    @app.route('/api/admin/produtos/<int:produto_id>', methods=['PUT', 'DELETE'])
-    def api_admin_produto(produto_id):
-        from admin.produtos import ProdutosAdmin
-        if request.method == 'PUT': return jsonify(ProdutosAdmin.editar(produto_id, request.json))
-        return jsonify(ProdutosAdmin.excluir(produto_id))
-    
-    @app.route('/api/admin/produtos/<int:produto_id>/toggle', methods=['POST'])
-    def api_admin_toggle_produto(produto_id):
-        from admin.produtos import ProdutosAdmin
-        return jsonify(ProdutosAdmin.toggle_status(produto_id))
-    
     @app.route('/api/admin/pedidos')
     def api_admin_pedidos():
         from admin.pedidos import PedidosAdmin
         return jsonify(PedidosAdmin.listar(filtro=request.args.get('filtro', 'pendentes')))
     
-    @app.route('/api/admin/pedidos/<int:pedido_id>/status', methods=['PUT'])
-    def api_admin_pedido_status(pedido_id):
-        from admin.pedidos import PedidosAdmin
-        return jsonify(PedidosAdmin.alterar_status(pedido_id, request.json.get('status')))
-    
     @app.route('/api/admin/clientes')
     def api_admin_clientes():
         from admin.clientes import ClientesAdmin
         return jsonify(ClientesAdmin.listar())
-    
-    @app.route('/api/admin/clientes/<int:cliente_id>/toggle', methods=['POST'])
-    def api_admin_toggle_cliente(cliente_id):
-        from admin.clientes import ClientesAdmin
-        return jsonify(ClientesAdmin.toggle_bloqueio(cliente_id))
     
     @app.route('/api/admin/financeiro')
     def api_admin_financeiro():
@@ -358,46 +242,20 @@ def create_flask_app():
         from admin.cupons import CuponsAdmin
         return jsonify(CuponsAdmin.listar())
     
-    @app.route('/api/admin/cupons/<int:cupom_id>/toggle', methods=['POST'])
-    def api_admin_toggle_cupom(cupom_id):
-        from admin.cupons import CuponsAdmin
-        return jsonify(CuponsAdmin.toggle(cupom_id))
-    
-    @app.route('/api/admin/afiliados')
-    def api_admin_afiliados():
-        from admin.afiliados import AfiliadosAdmin
-        return jsonify(AfiliadosAdmin.listar())
-    
     @app.route('/api/admin/mensagens')
     def api_admin_mensagens():
         from admin.mensagens import MensagensAdmin
         return jsonify(MensagensAdmin.listar())
-    
-    @app.route('/api/admin/mensagens', methods=['PUT'])
-    def api_admin_editar_mensagem():
-        from admin.mensagens import MensagensAdmin
-        data = request.json
-        return jsonify(MensagensAdmin.editar(data['chave'], data['conteudo']))
     
     @app.route('/api/admin/botoes')
     def api_admin_botoes():
         from admin.botoes import BotoesAdmin
         return jsonify(BotoesAdmin.listar())
     
-    @app.route('/api/admin/botoes/<int:botao_id>/toggle', methods=['POST'])
-    def api_admin_toggle_botao(botao_id):
-        from admin.botoes import BotoesAdmin
-        return jsonify(BotoesAdmin.toggle(botao_id))
-    
     @app.route('/api/admin/aparencia')
     def api_admin_aparencia():
         from admin.temas import TemasAdmin
         return jsonify(TemasAdmin.get_tema_atual())
-    
-    @app.route('/api/admin/aparencia', methods=['PUT'])
-    def api_admin_salvar_aparencia():
-        from admin.temas import TemasAdmin
-        return jsonify(TemasAdmin.salvar_tema(request.json))
     
     @app.route('/api/admin/config')
     def api_admin_config():
@@ -414,36 +272,6 @@ def create_flask_app():
         from admin.config import ConfigAdmin
         return jsonify(ConfigAdmin.salvar_varias(request.json))
     
-    @app.route('/api/admin/backup', methods=['POST'])
-    def api_admin_backup():
-        return jsonify(BackupService.realizar_backup())
-    
-    @app.route('/api/admin/exportar/<tipo>')
-    def api_admin_exportar(tipo):
-        from services.exportacao import ExportacaoService
-        if tipo == 'produtos': result = ExportacaoService.exportar_produtos_csv()
-        elif tipo == 'pedidos': result = ExportacaoService.exportar_pedidos_csv()
-        elif tipo == 'clientes': result = ExportacaoService.exportar_clientes_csv()
-        else: return jsonify({'erro': 'Tipo inválido'})
-        return Response(result['dados'], mimetype='text/csv', headers={'Content-Disposition': f'attachment;filename={tipo}.csv'})
-    
-    # ============ WEBHOOK ============
-    @app.route('/api/webhooks/mercadopago', methods=['POST'])
-    def api_webhook_mp():
-        from services.webhook import WebhookService
-        ws = WebhookService()
-        result = ws.processar_webhook_mercadopago(request.json or {})
-        return jsonify({'status': 'ok', 'result': result})
-    
-    # ============ ERROS ============
-    @app.errorhandler(404)
-    def not_found(e):
-        return jsonify({'erro': 'Rota não encontrada'}), 404
-    
-    @app.errorhandler(500)
-    def server_error(e):
-        return jsonify({'erro': 'Erro interno do servidor'}), 500
-    
     return app
 
 
@@ -459,24 +287,38 @@ def main():
     
     BackupService.agendar_backup_automatico()
     
-    from bot.cliente import LojaBot
-    bot_cliente = LojaBot()
-    threading.Thread(target=bot_cliente.run, daemon=True).start()
-    logger.info('✅ Bot Cliente iniciado')
-    
-    from bot.admin import start_bot_admin
-    threading.Thread(target=start_bot_admin, daemon=True).start()
-    logger.info('✅ Bot Admin iniciado')
-    
+    # Flask em thread separada
     app = create_flask_app()
     port = int(os.getenv('PORT', 3000))
+    
+    flask_thread = threading.Thread(
+        target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False),
+        daemon=True
+    )
+    flask_thread.start()
     
     logger.info(f'🌐 Servidor na porta {port}')
     logger.info(f'🛍️ WebApp: http://localhost:{port}/app')
     logger.info(f'👑 Admin: http://localhost:{port}/admin')
-    logger.info('🛒 Loja Digital pronta!')
     
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # Bots na thread principal
+    from bot.cliente import LojaBot
+    from bot.admin import start_bot_admin
+    
+    try:
+        logger.info('🤖 Iniciando Bot Cliente...')
+        bot_cliente = LojaBot()
+        logger.info('✅ Bot Cliente configurado')
+    except Exception as e:
+        logger.error(f'Erro Bot Cliente: {e}')
+    
+    try:
+        logger.info('🤖 Iniciando Bot Admin...')
+        start_bot_admin()
+    except Exception as e:
+        logger.error(f'Erro Bot Admin: {e}')
+    
+    logger.info('🛒 Loja Digital pronta!')
 
 
 if __name__ == '__main__':
