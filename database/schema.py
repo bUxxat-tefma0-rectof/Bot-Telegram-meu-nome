@@ -1,4 +1,7 @@
 from .connection import get_db
+import logging
+
+logger = logging.getLogger(__name__)
 
 def criar_todas_tabelas():
     db = get_db()
@@ -9,12 +12,19 @@ def criar_todas_tabelas():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             telegram_id INTEGER UNIQUE NOT NULL,
             tipo TEXT DEFAULT 'PF',
-            nome TEXT, sobrenome TEXT,
-            cpf TEXT UNIQUE, cnpj TEXT UNIQUE,
-            razao_social TEXT, nome_fantasia TEXT,
-            inscricao_estadual TEXT, responsavel TEXT,
-            data_nascimento TEXT, sexo TEXT,
-            telefone TEXT, email TEXT, senha TEXT,
+            nome TEXT,
+            sobrenome TEXT,
+            cpf TEXT UNIQUE,
+            cnpj TEXT UNIQUE,
+            razao_social TEXT,
+            nome_fantasia TEXT,
+            inscricao_estadual TEXT,
+            responsavel TEXT,
+            data_nascimento TEXT,
+            sexo TEXT,
+            telefone TEXT,
+            email TEXT,
+            senha TEXT,
             saldo REAL DEFAULT 0,
             total_gasto REAL DEFAULT 0,
             pontos_fidelidade INTEGER DEFAULT 0,
@@ -24,7 +34,11 @@ def criar_todas_tabelas():
             bloqueado INTEGER DEFAULT 0,
             etapa_cadastro TEXT DEFAULT 'inicio',
             codigo_verificacao TEXT,
+            codigo_whatsapp TEXT,
+            token_2fa TEXT,
             verificado INTEGER DEFAULT 0,
+            telefone_verificado INTEGER DEFAULT 0,
+            email_verificado INTEGER DEFAULT 0,
             data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
             ultimo_acesso DATETIME
         );
@@ -34,10 +48,16 @@ def criar_todas_tabelas():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cliente_id INTEGER NOT NULL,
             apelido TEXT DEFAULT 'Principal',
-            cep TEXT, logradouro TEXT, numero TEXT,
-            complemento TEXT, referencia TEXT,
-            bairro TEXT, cidade TEXT, estado TEXT,
-            latitude REAL, longitude REAL,
+            cep TEXT,
+            logradouro TEXT,
+            numero TEXT,
+            complemento TEXT,
+            referencia TEXT,
+            bairro TEXT,
+            cidade TEXT,
+            estado TEXT,
+            latitude REAL,
+            longitude REAL,
             principal INTEGER DEFAULT 0,
             FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
         );
@@ -116,6 +136,8 @@ def criar_todas_tabelas():
             numero TEXT UNIQUE NOT NULL,
             cliente_id INTEGER NOT NULL,
             endereco_id INTEGER,
+            entregador_id INTEGER,
+            tipo_entrega TEXT DEFAULT 'entrega',
             status TEXT DEFAULT 'recebido',
             subtotal REAL DEFAULT 0,
             taxa_entrega REAL DEFAULT 0,
@@ -123,6 +145,7 @@ def criar_todas_tabelas():
             total REAL DEFAULT 0,
             cupom TEXT,
             comentario TEXT,
+            opcao_falta TEXT DEFAULT 'substituir',
             pagamento_metodo TEXT DEFAULT 'pix',
             pagamento_id TEXT,
             pagamento_status TEXT DEFAULT 'pendente',
@@ -130,6 +153,8 @@ def criar_todas_tabelas():
             data_pedido DATETIME DEFAULT CURRENT_TIMESTAMP,
             data_pagamento DATETIME,
             data_entrega DATETIME,
+            data_agendada TEXT,
+            horario_agendado TEXT,
             FOREIGN KEY (cliente_id) REFERENCES clientes(id),
             FOREIGN KEY (endereco_id) REFERENCES enderecos(id)
         );
@@ -140,6 +165,7 @@ def criar_todas_tabelas():
             pedido_id INTEGER NOT NULL,
             produto_id INTEGER,
             produto_nome TEXT NOT NULL,
+            marca TEXT,
             quantidade INTEGER DEFAULT 1,
             preco_unitario REAL NOT NULL,
             comentario TEXT,
@@ -169,6 +195,22 @@ def criar_todas_tabelas():
             data DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (cliente_id) REFERENCES clientes(id),
             FOREIGN KEY (cupom_id) REFERENCES cupons(id)
+        );
+
+        -- PROMOÇÕES
+        CREATE TABLE IF NOT EXISTS promocoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            tipo TEXT,
+            valor REAL,
+            categoria_id INTEGER,
+            produto_id INTEGER,
+            bairro TEXT,
+            horario_inicio TEXT,
+            horario_fim TEXT,
+            ativo INTEGER DEFAULT 1,
+            data_inicio DATETIME,
+            data_fim DATETIME
         );
 
         -- AFILIADOS
@@ -202,6 +244,7 @@ def criar_todas_tabelas():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cliente_id INTEGER NOT NULL,
             valor REAL NOT NULL,
+            creditos INTEGER DEFAULT 0,
             payment_id TEXT,
             status TEXT DEFAULT 'pendente',
             data DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -230,6 +273,37 @@ def criar_todas_tabelas():
             UNIQUE(cliente_id, produto_id),
             FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
             FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
+        );
+
+        -- ENTREGADORES
+        CREATE TABLE IF NOT EXISTS entregadores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            telefone TEXT NOT NULL,
+            veiculo TEXT DEFAULT 'Moto',
+            placa TEXT,
+            ativo INTEGER DEFAULT 1,
+            data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- HORÁRIOS DE ENTREGA
+        CREATE TABLE IF NOT EXISTS horarios_entrega (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dia_semana INTEGER,
+            horario TEXT,
+            disponivel INTEGER DEFAULT 1
+        );
+
+        -- AVALIAÇÕES
+        CREATE TABLE IF NOT EXISTS avaliacoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_id INTEGER NOT NULL,
+            produto_id INTEGER,
+            pedido_id INTEGER,
+            nota INTEGER CHECK(nota >= 1 AND nota <= 5),
+            comentario TEXT,
+            data DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (cliente_id) REFERENCES clientes(id)
         );
 
         -- CONFIGURAÇÕES
@@ -306,18 +380,6 @@ def criar_todas_tabelas():
             data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
-        -- AVALIAÇÕES
-        CREATE TABLE IF NOT EXISTS avaliacoes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cliente_id INTEGER NOT NULL,
-            produto_id INTEGER,
-            pedido_id INTEGER,
-            nota INTEGER CHECK(nota >= 1 AND nota <= 5),
-            comentario TEXT,
-            data DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (cliente_id) REFERENCES clientes(id)
-        );
-
         -- DISPOSITIVOS
         CREATE TABLE IF NOT EXISTS dispositivos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -329,4 +391,4 @@ def criar_todas_tabelas():
         );
     ''')
     db.commit()
-    print('✅ Todas as tabelas criadas')
+    logger.info('✅ Todas as tabelas criadas com sucesso')
