@@ -1,0 +1,36 @@
+<div class="page-header">
+    <h2>📋 Gerenciar Pedidos</h2>
+    <div style="display:flex;gap:10px">
+        <select id="filtroPedidos" onchange="filtrarPedidos()" 
+                style="padding:10px;border-radius:8px;border:2px solid var(--border);font-size:14px">
+            <option value="pendentes">Pendentes</option>
+            <option value="todos">Todos</option>
+            <option value="hoje">Hoje</option>
+            <option value="entregues">Entregues</option>
+            <option value="cancelados">Cancelados</option>
+        </select>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Cliente</th>
+                    <th>Telefone</th>
+                    <th>Itens</th>
+                    <th>Total</th>
+                    <th>Pagamento</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaPedidos">
+                <tr><td colspan="9" style="text-align:center;color:#999;padding:20px">Carregando pedidos...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
