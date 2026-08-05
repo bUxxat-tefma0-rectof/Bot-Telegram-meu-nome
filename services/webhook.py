@@ -8,6 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class WebhookService:
+    
     def __init__(self):
         self.pix_service = PixService()
     
@@ -20,29 +21,45 @@ class WebhookService:
                 return {'sucesso': False, 'mensagem': 'ID de pagamento não encontrado'}
             
             db = get_db()
+            
+            # Verifica se é de um pedido
             pedido = db.execute('SELECT * FROM pedidos WHERE pagamento_id = ?', (payment_id,)).fetchone()
             
-            if not pedido:
-                recarga = db.execute('SELECT * FROM recargas WHERE payment_id = ?', (payment_id,)).fetchone()
-                if recarga:
-                    if action == 'payment.updated':
-                        db.execute("UPDATE recargas SET status = 'aprovado' WHERE payment_id = ?", (payment_id,))
-                        db.execute('UPDATE clientes SET saldo = saldo + ? WHERE id = ?', (recarga['valor'], recarga['cliente_id']))
-                        db.commit()
-                        return {'sucesso': True, 'tipo': 'recarga'}
-                
-                return {'sucesso': False, 'mensagem': 'Pedido/Recarga não encontrado'}
+            if pedido:
+                if action == 'payment.updated':
+                    result = self.pix_service.verificar_manualmente(pedido['id'])
+                    LogService.registrar(
+                        pedido['cliente_id'], 'webhook_pagamento', 'webhooks',
+                        f'Webhook processado para pedido {pedido["numero"]}: {result.get("status", "N/A")}'
+                    )
+                    return {'sucesso': True, 'tipo': 'pedido', 'pedido_id': pedido['id']}
             
-            if action == 'payment.updated':
-                self.pix_service.verificar_manualmente(pedido['id'])
-                return {'sucesso': True, 'tipo': 'pedido'}
+            # Verifica se é de uma recarga
+            recarga = db.execute('SELECT * FROM recargas WHERE payment_id = ?', (payment_id,)).fetchone()
             
-            return {'sucesso': True, 'mensagem': 'Webhook processado'}
+            if recarga:
+                if action == 'payment.updated':
+                    db.execute("UPDATE recargas SET status = 'aprovado' WHERE payment_id = ?", (payment_id,))
+                    db.execute('UPDATE clientes SET saldo = saldo + ? WHERE id = ?',
+                              (recarga['valor'], recarga['cliente_id']))
+                    db.commit()
+                    
+                    LogService.registrar(
+                        recarga['cliente_id'], 'webhook_recarga', 'webhooks',
+                        f'Recarga de R$ {recarga["valor"]:.2f} aprovada via webhook'
+                    )
+                    return {'sucesso': True, 'tipo': 'recarga'}
+            
+            return {'sucesso': True, 'mensagem': 'Webhook processado (nenhuma ação necessária)'}
             
         except Exception as e:
-            logger.error(f'Erro webhook: {e}')
+            logger.error(f'Erro ao processar webhook: {e}')
+            LogService.registrar(None, 'webhook_erro', 'webhooks', str(e))
             return {'sucesso': False, 'mensagem': str(e)}
     
-    def verificar_assinatura(self, data: str, signature: str, secret: str) -> bool:
+    @staticmethod
+    def verificar_assinatura(data: str, signature: str, secret: str) -> bool:
+        if not secret:
+            return True
         expected = hmac.new(secret.encode(), data.encode(), hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, signature)
